@@ -10,6 +10,7 @@ use windows::Win32::{
       ProcessStatus
     }
 };
+
 use std::io::{ Error, ErrorKind };
 use windows_core::PCSTR;
 use std::ffi::CString;
@@ -104,7 +105,7 @@ impl Process {
                 &mut buffer as *mut _ as *mut c_void,
                 std::mem::size_of::<T>(),
                 Some(&mut bytes_read)
-            ).unwrap();
+            )?;
 
             Ok(buffer)
         }
@@ -122,7 +123,7 @@ impl Process {
                 buffer.as_mut_ptr() as *mut c_void,
                 size,
                 Some(&mut bytes_read)
-            ).unwrap();
+            )?;
 
             Ok(buffer)
         }
@@ -130,16 +131,15 @@ impl Process {
 
     pub fn write<T>(&self, address: usize, value: T) -> Result<(), Error> {
         unsafe {
-            let address_ptr = address as *const c_void;
             let mut bytes_written: usize = 0;
 
             Debug::WriteProcessMemory(
                 self.p_handle,
-                address_ptr,
+                address as *const c_void,
                 &value as *const _ as *const c_void,
                 std::mem::size_of::<T>(),
                 Some(&mut bytes_written),
-            ).unwrap();
+            )?;
 
             Ok(())
         }

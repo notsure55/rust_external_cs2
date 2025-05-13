@@ -1,25 +1,20 @@
 use crate::offsets;
 use crate::game::Game;
-use std::io::Error;
-use std::io::ErrorKind;
+use crate::math::Vec3;
+
+use std::io::{Error, ErrorKind};
 
 pub trait Log {
     fn log(&self);
 }
 
 pub trait Pos {
-    fn pos(&self) -> &Vec3;
+    fn pos(&self) -> Vec3;
 }
 
 pub struct Player {
     pub m_pawn: Pawn,
     pub m_controller: Controller,
-}
-
-pub struct Vec3 {
-    x: f32,
-    y: f32,
-    z: f32
 }
 
 struct Pawn {
@@ -43,8 +38,8 @@ impl Log for Player {
 }
 
 impl Pos for Player {
-    fn pos(&self) -> &Vec3 {
-        &self.m_pawn.head
+    fn pos(&self) -> Vec3 {
+        self.m_pawn.head
     }
 }
 
@@ -130,9 +125,9 @@ impl Log for Entity {
 }
 
 impl Pos for Entity {
-    fn pos(&self) -> &Vec3 {
+    fn pos(&self) -> Vec3 {
         match self {
-            Entity::Player(player) => &player.pos(),
+            Entity::Player(player) => player.pos(),
         }
     }
 }

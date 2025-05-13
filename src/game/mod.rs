@@ -61,6 +61,12 @@ impl Game {
         }
     }
 
+    pub fn run_cheat_loop(&mut self) -> Result<(), Error>{
+        self.cache_entites();
+        aimbot::do_aimbot(&self)?;
+        Ok(())
+    }
+
     pub fn print_entities(&self) {
 
         match &self.local_entity {
