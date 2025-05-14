@@ -4,6 +4,7 @@ use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
 
 use crate::game::Game;
 use crate::game::entity::Entity;
+use crate::game::Toggles;
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -74,26 +75,28 @@ pub fn draw_to_screen<T: SurfaceTypeTrait + ResizeableSurface + 'static>(display
 
     frame.clear_color(0.0, 0.0, 0.0, 0.0);
 
-    for entity in game.entities.iter() {
-        match entity {
-            Entity::Player(ent) => {
-                let (head_pos, feet_pos) = ent.m_pawn.pos();
-                let head_2d = match head_pos.wts(game, window_size) {
-                    Some(head) => head,
-                    None => continue,
-                };
-                let feet_2d = match feet_pos.wts(game, window_size) {
-                    Some(feet) => feet,
-                    None => continue,
-                };
+    if game.toggles.esp {
+        for entity in game.entities.iter() {
+            match entity {
+                Entity::Player(ent) => {
+                    let (head_pos, feet_pos) = ent.m_pawn.pos();
+                    let head_2d = match head_pos.wts(game, window_size) {
+                        Some(head) => head,
+                        None => continue,
+                    };
+                    let feet_2d = match feet_pos.wts(game, window_size) {
+                        Some(feet) => feet,
+                        None => continue,
+                    };
 
-                let scalar = feet_2d.v[1] - head_2d.v[1];
-                let height = scalar * 1.20;
-                let width = scalar * 0.70;
-                let top_left = Vertex{ position: [head_2d.v[0] - scalar * 0.30, head_2d.v[1] - scalar * 0.10] };
+                    let scalar = feet_2d.v[1] - head_2d.v[1];
+                    let height = scalar * 1.20;
+                    let width = scalar * 0.70;
+                    let top_left = Vertex{ position: [head_2d.v[0] - scalar * 0.30, head_2d.v[1] - scalar * 0.10] };
 
-                draw_box(display, &mut frame, top_left, height, width, window_size);
-            },
+                    draw_box(display, &mut frame, top_left, height, width, window_size);
+                },
+            }
         }
     }
 
