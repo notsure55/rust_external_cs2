@@ -16,11 +16,8 @@ fn main() -> Result<(), Error> {
     let mut game = Game::new("Counter-Strike 2")?;
 
     let window_size = window::grab_window_dimensions(game.process.hwnd);
-    println!("{}, {}", window_size.left, window_size.right);
     let width = window_size.right - window_size.left - 15;
     let height = window_size.bottom - window_size.top - 40;
-
-    //thread::sleep(time::Duration::from_millis(5));
 
     #[allow(deprecated)]
     let window_attributes = WindowAttributes::new()

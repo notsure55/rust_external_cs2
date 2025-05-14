@@ -2,10 +2,14 @@ use crate::process::Process;
 use std::io::Error;
 use crate::game::entity::{Entity, Log};
 use crate::offsets;
-use crate::game::features::{aimbot, esp};
+use crate::game::features::{aimbot, esp, Toggles};
 // for esp
 use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
+use std::collections::HashMap;
+
+// for toggles
+use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState };
 
 mod entity;
 mod sig;
@@ -16,6 +20,7 @@ pub struct Game {
     pub process: Process,
     entities: Vec<Entity>,
     local_entity: Option<Entity>,
+    toggles: HashMap<Toggles, bool>,
     pub sig_scanner: sigscanner::SigScanner,
 }
 
@@ -30,6 +35,10 @@ impl Game {
             process,
             entities: Vec::new(),
             local_entity: None,
+            toggles: HashMap::from([
+                (Toggles::Aimbot, false),
+                (Toggles::Esp, false),
+            ]),
             sig_scanner,
         })
     }
@@ -71,9 +80,28 @@ impl Game {
     ) -> Result<(), Error> {
 
         self.cache_entites();
-        aimbot::do_aimbot(&self)?;
-        esp::draw_to_screen(display, &self);
+        self.cache_toggles();
+        if *self.toggles.get(&Toggles::Aimbot).unwrap_or(&false) == true {
+            aimbot::do_aimbot(&self)?;
+        }
+        if *self.toggles.get(&Toggles::Esp).unwrap_or(&false) == true {
+            esp::draw_to_screen(display, &self);
+        }
         Ok(())
+    }
+
+    fn cache_toggles(&mut self) {
+        // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+        // up arrow
+        unsafe {
+            if GetAsyncKeyState(0x26) & 0x01 > 0 {
+                self.toggles.insert(Toggles::Aimbot, !self.toggles.get(&Toggles::Aimbot).unwrap_or(&false));
+            }
+            // insert
+            if GetAsyncKeyState(0x2D) & 0x01 > 0 {
+                self.toggles.insert(Toggles::Esp, !self.toggles.get(&Toggles::Esp).unwrap_or(&false));
+            }
+        }
     }
 
     pub fn print_entities(&self) {
