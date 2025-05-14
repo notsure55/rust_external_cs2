@@ -13,36 +13,6 @@ pub struct ViewAngles {
     pub yaw: f32,
 }
 
-/*
-#define
-
-float calc_length(const glm::vec3 vec)
-{
-    return sqrtf(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-}
-
-glm::vec3 calc_distance(const glm::vec3 origin, const glm::vec3 target)
-{
-    return (origin - target);
-}
-
-float radians_to_degrees(const float angle)
-{
-    return angle * (180.0 / M_PI);
-}
-
-namespace Features::Aimbot {
-    glm::vec2 calc_angle(const glm::vec3 origin, const glm::vec3 target) {
-        auto angle = glm::vec2(0.0f, 0.0f);
-        // y is yaw, x is pitch
-        angle.y = radians_to_degrees((atan2f(target.y - origin.y, target.x - origin.x)));
-        angle.x =  radians_to_degrees(-(asinf((target.z - origin.z) / calc_length(calc_distance(origin, target)))));
-        return angle;
-    }
- */
-
-
-
 fn radians_to_degrees(angle: &f32) -> f32 {
     angle * (180.0 / M_PI)
 }

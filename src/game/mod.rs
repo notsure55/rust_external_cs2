@@ -2,11 +2,12 @@ use crate::process::Process;
 use std::io::Error;
 use crate::game::entity::{Entity, Log};
 use crate::offsets;
+use crate::game::features::aimbot;
 
 mod entity;
 mod sig;
 mod sigscanner;
-mod aimbot;
+mod features;
 
 pub struct Game {
     pub process: Process,
