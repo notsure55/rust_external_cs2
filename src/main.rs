@@ -1,7 +1,11 @@
-use std::io;
+use std::io::{Error, ErrorKind};
 use std::{thread, time};
 use crate::game::Game;
-use glfw::{Action, Context, Key};
+use glium::Surface;
+use winit::window::{ WindowAttributes, WindowLevel };
+use winit::raw_window_handle::{ Win32WindowHandle, RawWindowHandle, HasWindowHandle };
+use winit::platform::windows::HWND;
+use core::num::NonZeroIsize;
 
 mod process;
 mod offsets;
@@ -10,27 +14,63 @@ mod math;
 mod window;
 
 // im kind of interested in building an external cheat, because i want to use rust
-fn main() -> Result<(), io::Error> {
+fn main() -> Result<(), Error> {
 
     let mut game = Game::new("Counter-Strike 2")?;
 
-    let (mut glfw, mut window) = window::init_window();
+    //game.run_cheat_loop()?;
 
-    while !window.should_close() {
-        glfw.poll_events();
+    //thread::sleep(time::Duration::from_millis(5));
 
-        unsafe {
-            gl::ClearColor(0.0, 0.0, 0.0, 0.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-        }
-        window.swap_buffers();
+    let window_attributes = WindowAttributes::new()
+        .with_title("Hack Overlay")
+        .with_transparent(true)
+        .with_window_level(WindowLevel::AlwaysOnTop);
 
-        game.run_cheat_loop()?;
+    let event_loop = glium::winit::event_loop::EventLoop::builder()
+        .build()
+        .expect("event loop building");
 
-        window.swap_buffers();
+    let (_window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
+        .set_window_builder(window_attributes)
+        .build(&event_loop);
 
-        thread::sleep(time::Duration::from_millis(5));
-    }
+    let window_handle = match _window.window_handle() {
+        Ok(wh) => wh,
+        Err(_e) => return Err(Error::new(ErrorKind::Other, "Window HWND is invald!")),
+    };
+
+    let raw_handle = window_handle.as_raw();
+
+    let win32_handle: Win32WindowHandle = if let RawWindowHandle::Win32(hwnd) = raw_handle {
+        hwnd
+    } else {
+        return Err(Error::new(ErrorKind::Other, "Wrong raw handle returned!"))
+    };
+
+    let handle = win32_handle.hwnd;
+
+    window::make_window_click_through(handle.into());
+
+    let mut frame = display.draw();
+
+    frame.clear_color(0.0, 0.0, 0.0, 0.0);
+
+    frame.finish().unwrap();
+
+    #[allow(deprecated)]
+    event_loop.run(move |event, window_target| {
+        match event {
+            glium::winit::event::Event::WindowEvent { event, .. } => match event {
+                // This event is sent by the OS when you close the Window, or request the program to quit via the taskbar.
+                glium::winit::event::WindowEvent::CloseRequested => window_target.exit(),
+                _ => (),
+            },
+            _ => (),
+        };
+    })
+    .unwrap();
+
 
     Ok(())
 }
