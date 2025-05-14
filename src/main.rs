@@ -1,11 +1,8 @@
 use std::io::{Error, ErrorKind};
-use std::{thread, time};
 use crate::game::Game;
-use glium::Surface;
 use winit::window::{ WindowAttributes, WindowLevel };
-use winit::raw_window_handle::{ Win32WindowHandle, RawWindowHandle, HasWindowHandle };
-use winit::platform::windows::HWND;
-use core::num::NonZeroIsize;
+use winit::raw_window_handle::{ HasWindowHandle };
+use winit::dpi::{ Position::Logical, LogicalSize, LogicalPosition };
 
 mod process;
 mod offsets;
@@ -18,12 +15,18 @@ fn main() -> Result<(), Error> {
 
     let mut game = Game::new("Counter-Strike 2")?;
 
-    //game.run_cheat_loop()?;
+    let window_size = window::grab_window_dimensions(game.process.hwnd);
+    println!("{}, {}", window_size.left, window_size.right);
+    let width = window_size.right - window_size.left - 15;
+    let height = window_size.bottom - window_size.top - 40;
 
     //thread::sleep(time::Duration::from_millis(5));
 
+    #[allow(deprecated)]
     let window_attributes = WindowAttributes::new()
         .with_title("Hack Overlay")
+        .with_inner_size(LogicalSize::new(width as f32, height as f32))
+        .with_position(Logical(LogicalPosition::new(window_size.left.into(), window_size.top.into())))
         .with_transparent(true)
         .with_window_level(WindowLevel::AlwaysOnTop);
 
@@ -31,32 +34,21 @@ fn main() -> Result<(), Error> {
         .build()
         .expect("event loop building");
 
-    let (_window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
+    let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
         .set_window_builder(window_attributes)
         .build(&event_loop);
 
-    let window_handle = match _window.window_handle() {
+    let window_handle = match window.window_handle() {
         Ok(wh) => wh,
-        Err(_e) => return Err(Error::new(ErrorKind::Other, "Window HWND is invald!")),
+        Err(_e) => return Err(Error::new(ErrorKind::Other, "Raw Window handle is invald!")),
     };
 
-    let raw_handle = window_handle.as_raw();
-
-    let win32_handle: Win32WindowHandle = if let RawWindowHandle::Win32(hwnd) = raw_handle {
-        hwnd
-    } else {
-        return Err(Error::new(ErrorKind::Other, "Wrong raw handle returned!"))
+    let handle = match window::grab_handle(window_handle) {
+        Some(h) => h,
+        None => return Err(Error::new(ErrorKind::Other, "HWND is invald!")),
     };
-
-    let handle = win32_handle.hwnd;
 
     window::make_window_click_through(handle.into());
-
-    let mut frame = display.draw();
-
-    frame.clear_color(0.0, 0.0, 0.0, 0.0);
-
-    frame.finish().unwrap();
 
     #[allow(deprecated)]
     event_loop.run(move |event, window_target| {
@@ -64,13 +56,16 @@ fn main() -> Result<(), Error> {
             glium::winit::event::Event::WindowEvent { event, .. } => match event {
                 // This event is sent by the OS when you close the Window, or request the program to quit via the taskbar.
                 glium::winit::event::WindowEvent::CloseRequested => window_target.exit(),
+                glium::winit::event::WindowEvent::RedrawRequested => {
+                    game.run_cheat_loop(&display).unwrap();
+                    window.request_redraw()
+                },
                 _ => (),
             },
             _ => (),
         };
     })
     .unwrap();
-
 
     Ok(())
 }

@@ -2,7 +2,10 @@ use crate::process::Process;
 use std::io::Error;
 use crate::game::entity::{Entity, Log};
 use crate::offsets;
-use crate::game::features::aimbot;
+use crate::game::features::{aimbot, esp};
+// for esp
+use glium::backend::glutin::{Display};
+use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
 
 mod entity;
 mod sig;
@@ -62,9 +65,14 @@ impl Game {
         }
     }
 
-    pub fn run_cheat_loop(&mut self) -> Result<(), Error>{
+    pub fn run_cheat_loop<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
+        &mut self,
+        display: &Display<T>
+    ) -> Result<(), Error> {
+
         self.cache_entites();
         aimbot::do_aimbot(&self)?;
+        esp::draw_to_screen(display, &self);
         Ok(())
     }
 

@@ -1,7 +1,8 @@
 use windows::Win32::{
     Foundation::{
         HANDLE,
-        HMODULE
+        HMODULE,
+        HWND
     },
     UI::WindowsAndMessaging,
     System::{
@@ -19,6 +20,7 @@ use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub struct Process {
+    pub hwnd: HWND,
     p_handle: HANDLE,
     pub modules: BTreeMap<String, ProcessStatus::MODULEINFO>
 }
@@ -57,7 +59,7 @@ impl Process {
 
                 let mut mod_info: ProcessStatus::MODULEINFO = std::mem::zeroed();
 
-                ProcessStatus::GetModuleInformation(
+                let _ = ProcessStatus::GetModuleInformation(
                     p_handle,
                     *module,
                     &mut mod_info,
@@ -88,6 +90,7 @@ impl Process {
             let map = Self::get_modules(p_handle)?;
 
             Ok(Self {
+                hwnd,
                 p_handle,
                 modules: map
             })

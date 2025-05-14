@@ -1,6 +1,6 @@
 use crate::game::{Game, entity::Pos};
 use std::io::{Error, ErrorKind};
-use crate::math::{Vec3, ViewAngles};
+use crate::math::{ViewAngles};
 use crate::offsets;
 
 fn find_closest_entity(game: &Game) -> Result<ViewAngles, Error> {

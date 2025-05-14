@@ -17,7 +17,7 @@ pub struct Player {
     pub m_controller: Controller,
 }
 
-struct Pawn {
+pub struct Pawn {
     address: usize,
     health: i32,
     head: Vec3,
@@ -69,6 +69,9 @@ impl Controller {
 }
 
 impl Pawn {
+    pub fn pos(&self) -> (Vec3, Vec3){
+        (self.head, self.feet)
+    }
     pub fn new(game: &Game, entity_list_address: usize, controller_address: usize) -> Result<Self, Error> {
 
         let pawn_handle: usize = game.process.read(controller_address + offsets::PLAYER_PAWN_OFFSET)?;

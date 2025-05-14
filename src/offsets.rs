@@ -1,6 +1,6 @@
 // local_player offsets
-pub const LOCAL_PLAYER_PAWN_OFFSET: usize = 0x184B0D0;
 pub const LOCAL_PLAYER_VIEW_ANGLES: usize = 0x1A6B2E0;
+pub const VIEW_MATRIX: usize = 0x1A60EF0;
 
 // controller offsets
 pub const PLAYER_PAWN_OFFSET: usize = 0x62C;
