@@ -112,9 +112,10 @@ fn draw_check_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     frame.draw(&vertex_buffer, &indices, &program, &uniforms,
                &Default::default()).unwrap();
 
-    if mouse_pos.0 > top_left.position[0] + width || mouse_pos.0 < top_left.position[0]
-    || mouse_pos.1 > top_left.position[1] + height || mouse_pos.1 < top_left.position[1] {
-    } else {
+    // if mouse is witin checkbox
+    if mouse_pos.0 < top_left.position[0] + width || mouse_pos.0 > top_left.position[0]
+        || mouse_pos.1 < top_left.position[1] + height || mouse_pos.1 > top_left.position[1] {
+        // check if mouse was clicked
         if clicked {
             *toggle = !*toggle;
         }
