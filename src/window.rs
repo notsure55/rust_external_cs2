@@ -28,12 +28,18 @@ pub fn grab_handle(window_handle: winit::raw_window_handle::WindowHandle) -> Opt
     Some(handle)
 }
 
-pub fn make_window_click_through(winit_handle: platform::windows::HWND) {
-    let hwnd = HWND(winit_handle as *mut c_void);
-
+pub fn make_window_click_through(hwnd: HWND) {
     unsafe {
         let ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
         SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED.0 as i32 | WS_EX_TRANSPARENT.0 as i32);
+    }
+}
+
+pub fn make_window_non_click_through(hwnd: HWND) {
+    unsafe {
+        let mut ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
+        ex_style &= !(WS_EX_LAYERED.0 as i32);
+        SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_TRANSPARENT.0 as i32);
     }
 }
 

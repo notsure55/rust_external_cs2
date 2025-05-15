@@ -3,6 +3,8 @@ use crate::game::Game;
 use winit::window::{ WindowAttributes, WindowLevel };
 use winit::raw_window_handle::{ HasWindowHandle };
 use winit::dpi::{ Position::Logical, LogicalSize, LogicalPosition };
+use core::ffi::c_void;
+use windows::Win32::Foundation::HWND;
 
 mod process;
 mod offsets;
@@ -45,7 +47,11 @@ fn main() -> Result<(), Error> {
         None => return Err(Error::new(ErrorKind::Other, "HWND is invald!")),
     };
 
-    window::make_window_click_through(handle.into());
+    let hwnd: winit::platform::windows::HWND = handle.into();
+
+    game.overlay_handle = HWND(hwnd as *mut c_void);
+
+    window::make_window_click_through(game.overlay_handle);
 
     #[allow(deprecated)]
     event_loop.run(move |event, window_target| {

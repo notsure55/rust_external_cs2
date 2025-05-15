@@ -1,4 +1,7 @@
 use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState };
+use windows::Win32::Foundation::HWND;
+use crate::window;
+use crate::game::Game;
 
 pub mod aimbot;
 pub mod esp;
@@ -44,7 +47,7 @@ impl Toggles {
             },
         }
     }
-    pub fn cache_toggles(&mut self) {
+    pub fn cache_toggles(&mut self, handle: &HWND) {
         // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
         // up arrow
         unsafe {
@@ -54,6 +57,11 @@ impl Toggles {
             // insert
             if GetAsyncKeyState(0x2D) & 0x01 > 0 {
                 self.menu = !self.menu;
+                if self.menu {
+                    window::make_window_non_click_through(*handle);
+                } else {
+                    window::make_window_click_through(*handle);
+                }
             }
         }
     }

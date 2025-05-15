@@ -6,6 +6,8 @@ use crate::game::features::{aimbot, esp, Toggles};
 // for esp
 use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
+use windows::Win32::Foundation::HWND;
+use core::ffi::c_void;
 
 mod entity;
 mod sig;
@@ -14,6 +16,7 @@ mod features;
 
 pub struct Game {
     pub process: Process,
+    pub overlay_handle: HWND,
     entities: Vec<Entity>,
     local_entity: Option<Entity>,
     toggles: Toggles,
@@ -29,6 +32,7 @@ impl Game {
 
         Ok(Self {
             process,
+            overlay_handle: HWND(0 as *mut c_void),
             entities: Vec::new(),
             local_entity: None,
             toggles: Toggles::new(),
@@ -73,10 +77,12 @@ impl Game {
     ) -> Result<(), Error> {
 
         self.cache_entites();
-        self.toggles.cache_toggles();
+        self.toggles.cache_toggles(&self.overlay_handle);
+
         if self.toggles.aimbot {
             aimbot::do_aimbot(&self)?;
         }
+
         esp::draw_to_screen(display, &self);
 
         Ok(())
