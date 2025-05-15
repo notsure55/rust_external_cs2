@@ -2,12 +2,13 @@ use crate::process::Process;
 use std::io::Error;
 use crate::game::entity::{Entity, Log};
 use crate::offsets;
-use crate::game::features::{aimbot, esp, Toggles};
+use crate::game::features::{aimbot, esp, Toggles, menu};
 // for esp
 use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
 use windows::Win32::Foundation::HWND;
 use core::ffi::c_void;
+use glium::Surface;
 
 mod entity;
 mod sig;
@@ -21,6 +22,7 @@ pub struct Game {
     local_entity: Option<Entity>,
     toggles: Toggles,
     pub sig_scanner: sigscanner::SigScanner,
+    pub mouse_pos: (f32, f32),
 }
 
 impl Game {
@@ -37,6 +39,7 @@ impl Game {
             local_entity: None,
             toggles: Toggles::new(),
             sig_scanner,
+            mouse_pos: (0.0, 0.0),
         })
     }
     pub fn cache_entites(&mut self) {
@@ -73,7 +76,7 @@ impl Game {
 
     pub fn run_cheat_loop<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
         &mut self,
-        display: &Display<T>
+        display: &Display<T>,
     ) -> Result<(), Error> {
 
         self.cache_entites();
@@ -83,9 +86,29 @@ impl Game {
             aimbot::do_aimbot(&self)?;
         }
 
-        esp::draw_to_screen(display, &self);
+        self.draw_to_screen(display);
 
         Ok(())
+    }
+
+    fn draw_to_screen<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
+        &mut self,
+        display: &Display<T>,
+    ) {
+        let mut frame = display.draw();
+
+        let window_size = display.get_framebuffer_dimensions();
+
+        frame.clear_color(0.0, 0.0, 0.0, 0.0);
+
+        if self.toggles.esp {
+            esp::render_esp(display, &mut frame, window_size, &self);
+        }
+        if self.toggles.menu {
+            menu::render_menu(display, &mut frame, window_size, self);
+        }
+
+        frame.finish().unwrap();
     }
 
     pub fn print_entities(&self) {

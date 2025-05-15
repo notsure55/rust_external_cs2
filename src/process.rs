@@ -76,12 +76,14 @@ impl Process {
         unsafe {
             let window_name = CString::new(input).unwrap();
 
-            let hwnd = WindowsAndMessaging::FindWindowA(None, PCSTR::from_raw(window_name.as_ptr() as _)).unwrap();
+            let hwnd = WindowsAndMessaging::FindWindowA(None, PCSTR::from_raw(window_name.as_ptr() as _))
+                .expect("Process Not Open!");
 
             let mut process_id: u32 = 0;
             let _ = WindowsAndMessaging::GetWindowThreadProcessId(hwnd, Some(&mut process_id));
 
-            let p_handle = Threading::OpenProcess(Threading::PROCESS_ALL_ACCESS, false, process_id).unwrap();
+            let p_handle = Threading::OpenProcess(Threading::PROCESS_ALL_ACCESS, false, process_id)
+                .expect("Failed to grab process handle!");
 
             if p_handle.is_invalid() {
                 return Err(Error::new(ErrorKind::Other, "Process handle is invald!"));

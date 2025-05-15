@@ -59,6 +59,9 @@ fn main() -> Result<(), Error> {
             glium::winit::event::Event::WindowEvent { event, .. } => match event {
                 // This event is sent by the OS when you close the Window, or request the program to quit via the taskbar.
                 glium::winit::event::WindowEvent::CloseRequested => window_target.exit(),
+                glium::winit::event::WindowEvent::CursorMoved { position, .. } => {
+                    game.mouse_pos = (position.x as f32, position.y as f32);
+                },
                 glium::winit::event::WindowEvent::RedrawRequested => {
                     game.run_cheat_loop(&display).unwrap();
                     window.request_redraw()

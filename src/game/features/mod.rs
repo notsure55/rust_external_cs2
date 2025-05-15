@@ -1,10 +1,11 @@
-use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState };
+use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState, SendInput, INPUT, INPUT_TYPE, MOUSE_EVENT_FLAGS, INPUT_0 };
 use windows::Win32::Foundation::HWND;
 use crate::window;
 use crate::game::Game;
 
 pub mod aimbot;
 pub mod esp;
+pub mod menu;
 
 pub struct AimbotToggles {
     pub fov_toggle: bool,
@@ -19,6 +20,7 @@ pub struct EspToggles {
 }
 
 pub struct Toggles {
+    pub clicked: bool,
     // aimbot bools
     pub aimbot: bool,
     pub aimbot_toggles: AimbotToggles,
@@ -32,6 +34,7 @@ pub struct Toggles {
 impl Toggles {
     pub fn new() -> Self {
         Self {
+            clicked: false,
             aimbot: false,
             aimbot_toggles: AimbotToggles {
                 fov_toggle: true,
@@ -62,6 +65,23 @@ impl Toggles {
                 } else {
                     window::make_window_click_through(*handle);
                 }
+                // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput
+                let mut inputs = [INPUT { r#type: INPUT_TYPE(0), Anonymous: INPUT_0::default() }; 2];
+
+                inputs[0].r#type = INPUT_TYPE(0);
+                inputs[0].Anonymous.mi.dwFlags = MOUSE_EVENT_FLAGS(0x0002);
+
+                inputs[1].r#type = INPUT_TYPE(0);
+                inputs[1].Anonymous.mi.dwFlags = MOUSE_EVENT_FLAGS(0x0004);
+
+                SendInput(&inputs, std::mem::size_of_val::<INPUT>(&inputs[0]) as i32);
+            }
+            // reset for next loop if not clicked again
+            if self.clicked {
+                self.clicked = false;
+            }
+            if GetAsyncKeyState(0x01) & 0x01 > 0 {
+                self.clicked = true;
             }
         }
     }
