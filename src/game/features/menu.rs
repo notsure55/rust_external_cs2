@@ -5,6 +5,84 @@ use crate::game::Game;
 use crate::game::features::esp::Vertex;
 use crate::math::Vec4;
 
+fn is_clicked(
+    mouse_pos: (f32, f32),
+    top_left: Vertex,
+    width: f32,
+    height: f32,
+    clicked: bool
+) -> bool {
+    if mouse_pos.0 < top_left.position[0] + width && mouse_pos.0 > top_left.position[0]
+    && mouse_pos.1 < top_left.position[1] + height && mouse_pos.1 > top_left.position[1] {
+        if clicked {
+            return true
+        } else {
+            return false
+        }
+    } else {
+        return false
+    }
+}
+
+pub fn draw_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
+    display: &Display<T>,
+    frame: &mut Frame,
+    top_left: Vertex,
+    width: f32,
+    height: f32,
+    window_size: (u32, u32)
+) {
+
+    let uniforms = uniform! {
+        screen_size: [window_size.0 as f32, window_size.1 as f32]
+    };
+
+    let shape = vec![
+        Vertex { position: [ top_left.position[0], top_left.position[1] ] },
+        Vertex { position: [ top_left.position[0] + width, top_left.position[1]] },
+        Vertex { position: [ top_left.position[0] + width, top_left.position[1] + height] },
+        Vertex { position: [ top_left.position[0], top_left.position[1] + height] },
+    ];
+
+    let vertex_buffer = glium::VertexBuffer::new(display, &shape).unwrap();
+    let indices = glium::index::NoIndices(glium::index::PrimitiveType::LineLoop);
+
+    let vertex_shader_src = r#"
+        #version 140
+
+        in vec2 position;
+        uniform vec2 screen_size;
+
+        void main() {
+        vec2 zero_to_one = position / screen_size;
+        vec2 zero_to_two = zero_to_one * 2.0;
+        vec2 clip_space = zero_to_two - 1.0;
+        clip_space.y = -clip_space.y;
+
+        gl_Position = vec4(clip_space, 0.0, 1.0);
+        }
+        "#;
+    let fragment_shader_src = r#"
+        #version 140
+
+        out vec4 color;
+
+        void main() {
+        color = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+        "#;
+
+    let params = glium::DrawParameters {
+        line_width: Some(2.0),
+        .. Default::default()
+    };
+
+    let program = glium::Program::from_source(display, vertex_shader_src, fragment_shader_src, None).unwrap();
+
+    frame.draw(&vertex_buffer, &indices, &program, &uniforms,
+               &params).unwrap();
+}
+
 pub fn draw_filled_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     display: &Display<T>,
     frame: &mut Frame,
@@ -59,6 +137,22 @@ pub fn draw_filled_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
 
     frame.draw(&vertex_buffer, &indices, &program, &uniforms,
                &Default::default()).unwrap();
+}
+
+fn is_hovering<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
+    display: &Display<T>,
+    frame: &mut Frame,
+    top_left: Vertex,
+    width: f32,
+    height: f32,
+    window_size: (u32, u32),
+    mouse_pos: (f32, f32)
+) {
+    if mouse_pos.0 < top_left.position[0] + width && mouse_pos.0 > top_left.position[0]
+    && mouse_pos.1 < top_left.position[1] + height && mouse_pos.1 > top_left.position[1] {
+        let top_left = Vertex { position: [ top_left.position[0] - 2.0, top_left.position[1] - 2.0] };
+        draw_box(display, frame, top_left, width + 4.0, height + 4.0, window_size);
+    }
 }
 
 fn draw_check_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
@@ -118,12 +212,10 @@ fn draw_check_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                &Default::default()).unwrap();
 
     // if mouse is witin checkbox
-    if mouse_pos.0 < top_left.position[0] + width && mouse_pos.0 > top_left.position[0]
-        && mouse_pos.1 < top_left.position[1] + height && mouse_pos.1 > top_left.position[1] {
-        // check if mouse was clicked
-        if clicked {
-            *toggle = !*toggle;
-        }
+    is_hovering(display, frame, top_left, width, height, window_size, mouse_pos);
+
+    if is_clicked(mouse_pos, top_left, width, height, clicked) {
+        *toggle = !*toggle;
     }
     if *toggle {
         draw_check(display, frame, top_left, window_size);
@@ -185,24 +277,40 @@ fn draw_check<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                &params).unwrap();
 }
 
+static mut BASE: Vertex = Vertex { position: [100.0, 100.0] };
+
+fn calc_base(game: &Game, width: f32, height: f32) -> Vertex {
+    unsafe {
+        if is_clicked(game.mouse_pos, BASE, width, height, game.toggles.dragging) {
+            BASE.position[0] += game.mouse_pos.0 - BASE.position[0] + 100.0;
+            BASE.position[1] += game.mouse_pos.1 - BASE.position[0] + 100.0;
+        }
+        return BASE
+    }
+}
+
 pub fn render_menu<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     display: &Display<T>,
     frame: &mut Frame,
     window_size: (u32, u32),
     game: &mut Game,
 ) {
+    const width: f32 = 600.0;
+    const height: f32 = 450.0;
+    let base = calc_base(game, width, height);
     // draw main box
     draw_filled_box(display,
                     frame,
-                    Vertex { position: [ 100.0, 100.0 ] },
-                    600.0,
-                    450.0,
+                    base,
+                    width,
+                    height,
                     window_size,
                     Vec4::new(0.2, 0.2, 0.2, 1.0)
     );
+    // draw esp checkbox
     draw_check_box(display,
                    frame,
-                   Vertex { position: [ 115.0, 115.0 ] },
+                   Vertex { position: [ base.position[0] + 15.0, base.position[1] + 15.0 ] },
                    window_size,
                    &mut game.toggles.esp,
                    game.toggles.clicked,

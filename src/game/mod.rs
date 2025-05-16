@@ -80,7 +80,7 @@ impl Game {
     ) -> Result<(), Error> {
 
         self.cache_entites();
-        self.toggles.cache_toggles(&self.overlay_handle);
+        self.toggles.cache_toggles(&self.overlay_handle, self.mouse_pos);
 
         if self.toggles.aimbot {
             aimbot::do_aimbot(&self)?;
