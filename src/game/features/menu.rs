@@ -282,8 +282,8 @@ static mut BASE: Vertex = Vertex { position: [100.0, 100.0] };
 fn calc_base(game: &Game, width: f32, height: f32) -> Vertex {
     unsafe {
         if is_clicked(game.mouse_pos, BASE, width, height, game.toggles.dragging) {
-            BASE.position[0] += game.mouse_pos.0 - BASE.position[0] + 100.0;
-            BASE.position[1] += game.mouse_pos.1 - BASE.position[0] + 100.0;
+            BASE.position[0] += game.mouse_pos.0 - BASE.position[0] - 100.0;
+            BASE.position[1] += game.mouse_pos.1 - BASE.position[1] - 100.0;
         }
         return BASE
     }
@@ -316,4 +316,8 @@ pub fn render_menu<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                    game.toggles.clicked,
                    game.mouse_pos,
     );
+}
+
+fn draw_text<T: SurfaceTypeTrait + ResizeableSurface + 'static>(display: &Display<T>, frame: &mut Frame) {
+
 }
