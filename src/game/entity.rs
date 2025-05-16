@@ -19,7 +19,7 @@ pub struct Player {
 
 pub struct Pawn {
     address: usize,
-    health: i32,
+    pub health: i32,
     head: Vec3,
     feet: Vec3,
     yaw: f32,

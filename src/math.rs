@@ -14,6 +14,11 @@ pub struct Vec2 {
     pub v: [f32; 2],
 }
 
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Vec4 {
+    pub v: [f32; 4],
+}
+
 struct Matrix {
     pub v: [[f32; 4]; 4],
 }
@@ -26,6 +31,20 @@ pub struct ViewAngles {
 
 fn radians_to_degrees(angle: &f32) -> f32 {
     angle * (180.0 / M_PI)
+}
+
+impl Vec4 {
+    pub fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
+        Self {
+            v:
+            [
+                r,
+                g,
+                b,
+                a,
+            ],
+        }
+    }
 }
 
 impl Vec2 {

@@ -3,17 +3,20 @@ use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
 use crate::game::Game;
 use crate::game::features::esp::Vertex;
+use crate::math::Vec4;
 
-fn draw_filled_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
+pub fn draw_filled_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     display: &Display<T>,
     frame: &mut Frame,
     top_left: Vertex,
     width: f32,
     height: f32,
-    window_size: (u32, u32)
-    ) {
+    window_size: (u32, u32),
+    color_input: Vec4
+) {
     let uniforms = uniform! {
-        screen_size: [window_size.0 as f32, window_size.1 as f32]
+        screen_size: [window_size.0 as f32, window_size.1 as f32],
+        color_input: [color_input.v[0], color_input.v[1], color_input.v[2], color_input.v[3]]
     };
 
     let shape = vec![
@@ -44,10 +47,11 @@ fn draw_filled_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     let fragment_shader_src = r#"
         #version 140
 
+        uniform vec4 color_input;
         out vec4 color;
 
         void main() {
-        color = vec4(0.2, 0.2, 0.2, 1.0);
+        color = color_input;
         }
         "#;
 
@@ -65,7 +69,8 @@ fn draw_check_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     toggle: &mut bool,
     clicked: bool,
     mouse_pos: (f32, f32)
-    ) {
+) {
+
     let width = 35.0;
     let height = 35.0;
     let uniforms = uniform! {
@@ -113,8 +118,8 @@ fn draw_check_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                &Default::default()).unwrap();
 
     // if mouse is witin checkbox
-    if mouse_pos.0 < top_left.position[0] + width || mouse_pos.0 > top_left.position[0]
-        || mouse_pos.1 < top_left.position[1] + height || mouse_pos.1 > top_left.position[1] {
+    if mouse_pos.0 < top_left.position[0] + width && mouse_pos.0 > top_left.position[0]
+        && mouse_pos.1 < top_left.position[1] + height && mouse_pos.1 > top_left.position[1] {
         // check if mouse was clicked
         if clicked {
             *toggle = !*toggle;
@@ -130,7 +135,7 @@ fn draw_check<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     frame: &mut Frame,
     top_left: Vertex,
     window_size: (u32, u32)
-    ) {
+) {
     let uniforms = uniform! {
         screen_size: [window_size.0 as f32, window_size.1 as f32]
     };
@@ -192,7 +197,8 @@ pub fn render_menu<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                     Vertex { position: [ 100.0, 100.0 ] },
                     600.0,
                     450.0,
-                    window_size
+                    window_size,
+                    Vec4::new(0.2, 0.2, 0.2, 1.0)
     );
     draw_check_box(display,
                    frame,
