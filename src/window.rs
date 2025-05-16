@@ -1,4 +1,3 @@
-use core::ffi::c_void;
 use windows::{
     Win32::UI::WindowsAndMessaging::{
         GetWindowLongW,
@@ -49,5 +48,4 @@ pub fn grab_window_dimensions(hwnd: HWND) -> RECT {
         _ = GetWindowRect(hwnd, &mut window_dimensions);
         return window_dimensions
     }
-
 }

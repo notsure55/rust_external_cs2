@@ -22,13 +22,15 @@ pub struct Pawn {
     pub health: i32,
     head: Vec3,
     feet: Vec3,
+    #[allow(unused)]
     yaw: f32,
+    #[allow(unused)]
     pitch: f32
 }
 
 pub struct Controller {
     pub address: usize,
-    name: String
+    pub name: String
 }
 
 impl Log for Player {

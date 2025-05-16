@@ -80,7 +80,7 @@ impl Game {
     ) -> Result<(), Error> {
 
         self.cache_entites();
-        self.toggles.cache_toggles(&self.overlay_handle, self.mouse_pos);
+        self.toggles.cache_toggles(&self.overlay_handle);
 
         if self.toggles.aimbot {
             aimbot::do_aimbot(&self)?;
@@ -95,6 +95,8 @@ impl Game {
         &mut self,
         display: &Display<T>,
     ) {
+        // for storing text glyphs for drawing
+
         let mut frame = display.draw();
 
         let window_size = display.get_framebuffer_dimensions();
@@ -110,7 +112,7 @@ impl Game {
 
         frame.finish().unwrap();
     }
-
+    #[allow(unused, dead_code)]
     pub fn print_entities(&self) {
 
         match &self.local_entity {
@@ -121,6 +123,5 @@ impl Game {
         for player in self.entities.iter() {
             player.log();
         }
-
     }
 }

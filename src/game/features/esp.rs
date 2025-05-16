@@ -1,8 +1,8 @@
-use glium::{ Surface, implement_vertex, uniform, Frame };
+use glium::{ implement_vertex, Frame };
 use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
 
-use crate::game::{Game, entity::Entity, Toggles, features::menu::{ draw_filled_box, draw_box } };
+use crate::game::{Game, entity::Entity, features::menu::{ draw_filled_box, draw_box } };
 use crate::math::Vec4;
 
 
@@ -17,7 +17,7 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     display: &Display<T>,
     frame: &mut Frame,
     window_size: (u32, u32),
-    game: &Game
+    game: &Game,
 ) {
     for entity in game.entities.iter() {
         match entity {
@@ -37,7 +37,7 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                 let width = scalar * 0.70;
                 let top_left = Vertex{ position: [head_2d.v[0] - scalar * 0.30, head_2d.v[1] - scalar * 0.10] };
 
-                if (game.toggles.esp_toggles.boxes) {
+                if game.toggles.esp_toggles.boxes {
                     draw_box(
                         display,
                         frame,
@@ -48,15 +48,23 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                     );
                 }
 
-                if (game.toggles.esp_toggles.health_bars) {
+                if game.toggles.esp_toggles.names {
+                    /*draw_text(
+                        top_left,
+                        window_size,
+                        &ent.m_controller.name,
+                        game
+                    );*/
+                }
+
+                if game.toggles.esp_toggles.health_bars {
                     draw_health_bars(
                         display,
                         frame,
                         top_left,
-                        width,
-                        height,
                         window_size,
                         ent.m_pawn.health,
+                        height,
                         scalar
                     );
                 }
@@ -69,10 +77,9 @@ fn draw_health_bars<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     display: &Display<T>,
     frame: &mut Frame,
     top_left: Vertex,
-    width: f32,
-    height: f32,
     window_size: (u32, u32),
     health: i32,
+    height: f32,
     scalar: f32
 ) {
     let health_scalar = -(health as f32 - 100.0) * 0.01;

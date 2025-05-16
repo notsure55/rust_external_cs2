@@ -1,6 +1,7 @@
-use glium::{ Surface, implement_vertex, uniform, Frame };
+use glium::{ Surface, uniform, Frame };
 use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
+
 use crate::game::Game;
 use crate::game::features::esp::Vertex;
 use crate::math::Vec4;
@@ -82,6 +83,16 @@ pub fn draw_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     frame.draw(&vertex_buffer, &indices, &program, &uniforms,
                &params).unwrap();
 }
+
+/*pub fn draw_text(
+    top_left: Vertex,
+    window_size: (u32, u32),
+    text: &str,
+    game: &Game
+) {
+
+}*/
+
 
 pub fn draw_filled_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     display: &Display<T>,
@@ -295,15 +306,15 @@ pub fn render_menu<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     window_size: (u32, u32),
     game: &mut Game,
 ) {
-    const width: f32 = 600.0;
-    const height: f32 = 450.0;
-    let base = calc_base(game, width, height);
+    const WIDTH: f32 = 600.0;
+    const HEIGHT: f32 = 450.0;
+    let base = calc_base(game, WIDTH, HEIGHT);
     // draw main box
     draw_filled_box(display,
                     frame,
                     base,
-                    width,
-                    height,
+                    WIDTH,
+                    HEIGHT,
                     window_size,
                     Vec4::new(0.2, 0.2, 0.2, 1.0)
     );
@@ -316,8 +327,4 @@ pub fn render_menu<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                    game.toggles.clicked,
                    game.mouse_pos,
     );
-}
-
-fn draw_text<T: SurfaceTypeTrait + ResizeableSurface + 'static>(display: &Display<T>, frame: &mut Frame) {
-
 }

@@ -1,12 +1,12 @@
 use windows::Win32::UI::Input::KeyboardAndMouse::{ GetAsyncKeyState, SendInput, INPUT, INPUT_TYPE, MOUSE_EVENT_FLAGS, INPUT_0 };
 use windows::Win32::Foundation::HWND;
 use crate::window;
-use crate::game::Game;
 
 pub mod aimbot;
 pub mod esp;
 pub mod menu;
 
+#[allow(unused)]
 pub struct AimbotToggles {
     pub fov_toggle: bool,
     pub fov_slider: f32,
@@ -17,8 +17,10 @@ pub struct AimbotToggles {
 pub struct EspToggles {
     pub boxes: bool,
     pub health_bars: bool,
+    pub names: bool,
 }
 
+#[allow(unused)]
 pub struct Toggles {
     pub clicked: bool,
     // for dragging mouse
@@ -50,10 +52,11 @@ impl Toggles {
             esp_toggles: EspToggles {
                 boxes: true,
                 health_bars: true,
+                names: true,
             },
         }
     }
-    pub fn cache_toggles(&mut self, handle: &HWND, mouse_pos: (f32, f32)) {
+    pub fn cache_toggles(&mut self, handle: &HWND) {
         // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
         // up arrow
         unsafe {

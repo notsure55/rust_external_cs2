@@ -1,6 +1,8 @@
 pub enum CPointer {
+    #[allow(unused)]
     Absolute,
     Relative,
+    #[allow(unused)]
     Normal,
 }
 
