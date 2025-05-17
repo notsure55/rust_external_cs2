@@ -37,7 +37,7 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                 let width = scalar * 0.70;
                 let top_left = Vertex{ position: [head_2d.v[0] - scalar * 0.30, head_2d.v[1] - scalar * 0.10] };
 
-                if game.toggles.esp_toggles.boxes {
+                /*if game.toggles.esp_toggles.boxes {
                     menu.draw_box(
                         frame,
                         top_left,
@@ -67,7 +67,7 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                         height,
                         scalar
                     );
-                }
+                }*/
             },
         }
     }
@@ -90,11 +90,11 @@ fn draw_health_bars<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
 
     let health_height = height - scalar * health_scalar;
 
-    menu.draw_filled_box(
+    /*menu.draw_filled_box(
         frame,
         health_top_left,
         health_width,
         health_height,
         Vec4::new(0.0 + health_scalar, 1.0 - health_scalar, 0.0, 1.0)
-    );
+    );*/
 }

@@ -25,6 +25,7 @@ pub struct Toggles {
     pub clicked: bool,
     // for dragging mouse
     pub dragging: bool,
+    pub cached_mouse_pos: (f32, f32),
     // aimbot bools
     pub aimbot: bool,
     pub aimbot_toggles: AimbotToggles,
@@ -40,6 +41,7 @@ impl Toggles {
         Self {
             clicked: false,
             dragging: false,
+            cached_mouse_pos: (0.0, 0.0),
             aimbot: false,
             aimbot_toggles: AimbotToggles {
                 fov_toggle: true,
@@ -56,7 +58,7 @@ impl Toggles {
             },
         }
     }
-    pub fn cache_toggles(&mut self, handle: &HWND) {
+    pub fn cache_toggles(&mut self, handle: &HWND, mouse_pos: (f32, f32)) {
         // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
         // up arrow
         unsafe {
@@ -92,6 +94,7 @@ impl Toggles {
             if GetAsyncKeyState(0x02) < 0 {
                 if !self.dragging {
                     self.dragging = true;
+                    self.cached_mouse_pos = mouse_pos;
                 }
             } else {
                 self.dragging = false;

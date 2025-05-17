@@ -1,14 +1,82 @@
 use glium::{ Surface, uniform, Frame };
 use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
+use std::io::{ Result, Error };
 
-use crate::game::Game;
+use crate::game::{ Game, features::Toggles };
 use crate::game::features::esp::Vertex;
 use crate::math::Vec4;
 
 use crate::rusttype as glium_text;
 
-pub struct Menu<T>
+pub struct Rect {
+    pub top_left: Vertex,
+    pub width: f32,
+    pub height: f32,
+}
+
+impl Rect {
+    pub fn new(top_left: Vertex, width: f32, height: f32) -> Self {
+        Self {
+            top_left,
+            width,
+            height,
+        }
+    }
+
+}
+
+pub trait Draw {
+    fn draw<T: SurfaceTypeTrait + ResizeableSurface + 'static>(&self, frame: &mut Frame, menu: &mut Menu<T>);
+}
+
+struct Box {
+    rect: Rect,
+    color: Vec4,
+}
+
+impl Box {
+    pub fn new(rect: Rect, color: Vec4) -> Self {
+        Self {
+            rect,
+            color,
+        }
+    }
+}
+
+struct CheckBox<'a> {
+    top_left: Vertex,
+    color: Vec4,
+    toggle: &'a mut bool,
+}
+
+impl<'a> CheckBox<'a> {
+    pub fn new(top_left: Vertex, color: Vec4, toggle: &'a mut bool) -> Self {
+        Self {
+            top_left,
+            color,
+            toggle
+        }
+    }
+}
+
+pub enum MenuObject<'a> {
+    CheckBox(CheckBox<'a>),
+    FilledBox(Box),
+    BoxOutline(Box),
+}
+
+impl<'a> Draw for MenuObject<'a> {
+    fn draw<T: SurfaceTypeTrait + ResizeableSurface + 'static>(&self, frame: &mut Frame, menu: &mut Menu<T>) {
+        match self {
+            MenuObject::CheckBox(check_box) => menu.draw_check_box(frame, check_box),
+            MenuObject::FilledBox(filled_box) => menu.draw_filled_box(frame, filled_box),
+            MenuObject::BoxOutline(outline_box) => menu.draw_box(frame, outline_box),
+        }
+    }
+}
+
+pub struct Menu<'a, T>
 where T: SurfaceTypeTrait + ResizeableSurface + 'static
 {
     pub display: Display<T>,
@@ -16,23 +84,46 @@ where T: SurfaceTypeTrait + ResizeableSurface + 'static
     system: glium_text::TextSystem,
     font: glium_text::FontTexture,
     base: Vertex,
+    objects: Vec<MenuObject<'a>>,
 }
 
-impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
+impl<'a, T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<'a, T> {
     pub fn new (
         display: Display<T>,
         window_size: (u32, u32),
         system: glium_text::TextSystem,
-        font: glium_text::FontTexture
+        font: glium_text::FontTexture,
+        toggles: &'a mut Toggles
     ) -> Self
     {
+        let mut objects = Menu::<T>::build_menu(toggles).unwrap();
+
         Self {
             display,
             window_size,
             system,
             font,
             base: Vertex { position: [ 100.0, 100.0 ] },
+            objects,
         }
+    }
+    fn build_menu(toggles: &mut Toggles) -> Result<Vec<MenuObject>> {
+        let mut objects = Vec::new();
+
+        let base = Vertex { position: [ 100.0, 100.0 ] };
+
+        let filled_box = Box::new(
+            Rect::new(Vertex { position: [100.0, 100.0] }, 600.0, 450.0 ),
+            Vec4::new(0.4, 0.4, 0.4, 1.0)
+        );
+        objects.push(MenuObject::FilledBox(filled_box));
+        let check_box = CheckBox::new(
+            Vertex { position: [base.position[0] + 15.0, base.position[1] + 15.0] },
+            Vec4::new(1.0, 0.5, 0.0, 1.0),
+            &mut toggles.esp
+        );
+        objects.push(MenuObject::CheckBox(check_box));
+        Ok(objects)
     }
     fn is_clicked(
         &self,
@@ -57,20 +148,19 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
     pub fn draw_box(
         &mut self,
         frame: &mut Frame,
-        top_left: Vertex,
-        width: f32,
-        height: f32,
+        b: &Box,
     ) {
 
         let uniforms = uniform! {
-            screen_size: [self.window_size.0 as f32, self.window_size.1 as f32]
+            screen_size: [self.window_size.0 as f32, self.window_size.1 as f32],
+
         };
 
         let shape = vec![
-            Vertex { position: [ top_left.position[0], top_left.position[1] ] },
-            Vertex { position: [ top_left.position[0] + width, top_left.position[1]] },
-            Vertex { position: [ top_left.position[0] + width, top_left.position[1] + height] },
-            Vertex { position: [ top_left.position[0], top_left.position[1] + height] },
+            Vertex { position: [ b.rect.top_left.position[0], b.rect.top_left.position[1] ] },
+            Vertex { position: [ b.rect.top_left.position[0] + b.rect.width, b.rect.top_left.position[1]] },
+            Vertex { position: [ b.rect.top_left.position[0] + b.rect.width, b.rect.top_left.position[1] + b.rect.height] },
+            Vertex { position: [ b.rect.top_left.position[0], b.rect.top_left.position[1] + b.rect.height] },
         ];
 
         let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape).unwrap();
@@ -154,21 +244,18 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
     pub fn draw_filled_box(
         &mut self,
         frame: &mut Frame,
-        top_left: Vertex,
-        width: f32,
-        height: f32,
-        color_input: Vec4
+        b: &Box,
     ) {
         let uniforms = uniform! {
             screen_size: [self.window_size.0 as f32, self.window_size.1 as f32],
-            color_input: [color_input.v[0], color_input.v[1], color_input.v[2], color_input.v[3]]
+            color_input: [b.color.v[0], b.color.v[1], b.color.v[2], b.color.v[3]]
         };
 
         let shape = vec![
-            Vertex { position: [ top_left.position[0], top_left.position[1] ] },
-            Vertex { position: [ top_left.position[0] + width, top_left.position[1]] },
-            Vertex { position: [ top_left.position[0] + width, top_left.position[1] + height] },
-            Vertex { position: [ top_left.position[0], top_left.position[1] + height] },
+            Vertex { position: [ b.rect.top_left.position[0], b.rect.top_left.position[1] ] },
+            Vertex { position: [ b.rect.top_left.position[0] + b.rect.width, b.rect.top_left.position[1]] },
+            Vertex { position: [ b.rect.top_left.position[0] + b.rect.width, b.rect.top_left.position[1] + b.rect.height] },
+            Vertex { position: [ b.rect.top_left.position[0], b.rect.top_left.position[1] + b.rect.height] },
         ];
 
         let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape).unwrap();
@@ -211,7 +298,7 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
         ).unwrap();
     }
 
-    fn is_hovering(
+    /*fn is_hovering(
         &mut self,
         frame: &mut Frame,
         top_left: Vertex,
@@ -224,27 +311,25 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
                 let top_left = Vertex { position: [ top_left.position[0] - 2.0, top_left.position[1] - 2.0] };
                 self.draw_box(frame, top_left, width + 4.0, height + 4.0);
             }
-    }
+    }*/
 
     fn draw_check_box(
         &mut self,
         frame: &mut Frame,
-        top_left: Vertex,
-        toggle: &mut bool,
-        clicked: bool,
-        mouse_pos: (f32, f32)
+        b: &CheckBox,
     ) {
         let width = 35.0;
         let height = 35.0;
         let uniforms = uniform! {
-            screen_size: [self.window_size.0 as f32, self.window_size.1 as f32]
+            screen_size: [self.window_size.0 as f32, self.window_size.1 as f32],
+            color_input: [b.color.v[0], b.color.v[1], b.color.v[2], b.color.v[3]]
         };
 
         let shape = vec![
-            Vertex { position: [ top_left.position[0], top_left.position[1] ] },
-            Vertex { position: [ top_left.position[0] + width, top_left.position[1]] },
-            Vertex { position: [ top_left.position[0] + width, top_left.position[1] + height] },
-            Vertex { position: [ top_left.position[0], top_left.position[1] + height] },
+            Vertex { position: [ b.top_left.position[0], b.top_left.position[1] ] },
+            Vertex { position: [ b.top_left.position[0] + width, b.top_left.position[1]] },
+            Vertex { position: [ b.top_left.position[0] + width, b.top_left.position[1] + height] },
+            Vertex { position: [ b.top_left.position[0], b.top_left.position[1] + height] },
         ];
 
         let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape).unwrap();
@@ -268,10 +353,11 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
         let fragment_shader_src = r#"
         #version 140
 
+        uniform vec4 color_input;
         out vec4 color;
 
         void main() {
-        color = vec4(0.4, 0.4, 0.4, 1.0);
+        color = color_input;
         }
         "#;
 
@@ -286,6 +372,7 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
         ).unwrap();
 
         // if mouse is witin checkbox
+        /*
         self.is_hovering(frame, top_left, width, height, mouse_pos);
 
         if self.is_clicked(mouse_pos, top_left, width, height, clicked) {
@@ -293,7 +380,7 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
         }
         if *toggle {
             self.draw_check(frame, top_left);
-        }
+        }*/
     }
 
     fn draw_check(
@@ -354,11 +441,17 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
             &params
         ).unwrap();
     }
+    fn is_dragging() {
 
-    fn calc_base(&mut self, game: &Game, width: f32, height: f32) -> Vertex {
-        if self.is_clicked(game.mouse_pos, self.base, width, height, game.toggles.dragging) {
-            self.base.position[0] += game.mouse_pos.0 - self.base.position[0] - 100.0;
-            self.base.position[1] += game.mouse_pos.1 - self.base.position[1] - 100.0;
+    }
+    fn calc_base(&mut self, game: &mut Game, width: f32, height: f32) -> Vertex {
+        // if mouse_pos has changed
+        if game.mouse_pos.0 != game.toggles.cached_mouse_pos.0 || game.mouse_pos.1 != game.toggles.cached_mouse_pos.1 {
+            if self.is_clicked(game.mouse_pos, self.base, width, height, game.toggles.dragging) {
+                self.base.position[0] += game.mouse_pos.0 - game.toggles.cached_mouse_pos.0;
+                self.base.position[1] += game.mouse_pos.1 - game.toggles.cached_mouse_pos.1;
+                game.toggles.cached_mouse_pos = game.mouse_pos;
+            }
         }
         return self.base
     }
@@ -368,7 +461,7 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
         game: &mut Game,
         frame: &mut Frame
     ) {
-        const WIDTH: f32 = 600.0;
+        /*const WIDTH: f32 = 600.0;
         const HEIGHT: f32 = 450.0;
         let base = self.calc_base(game, WIDTH, HEIGHT);
         // draw main box
@@ -392,10 +485,10 @@ impl<T: SurfaceTypeTrait + ResizeableSurface + 'static> Menu<T> {
         self.draw_check_box(
             frame,
             Vertex { position: [ base.position[0] + 15.0, base.position[1] + 30.0 ] },
-            &mut game.toggles.esp,
+             &mut game.toggles.esp,
             game.toggles.clicked,
             game.mouse_pos,
-        );
+        );*/
     }
 
 }

@@ -62,7 +62,7 @@ fn main() -> Result<(), Error> {
 
     let window_size = display.get_framebuffer_dimensions();
 
-    let mut menu = Menu::new(display, window_size, system, font);
+    let mut menu = Menu::new(display, window_size, system, font, &mut game.toggles);
 
     let hwnd: winit::platform::windows::HWND = handle.into();
 

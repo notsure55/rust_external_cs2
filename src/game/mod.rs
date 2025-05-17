@@ -21,7 +21,7 @@ pub struct Game {
     pub overlay_handle: HWND,
     entities: Vec<Entity>,
     local_entity: Option<Entity>,
-    toggles: Toggles,
+    pub toggles: Toggles,
     pub sig_scanner: sigscanner::SigScanner,
     pub mouse_pos: (f32, f32),
 }
@@ -81,7 +81,7 @@ impl Game {
     ) -> Result<(), Error> {
 
         self.cache_entites();
-        self.toggles.cache_toggles(&self.overlay_handle);
+        self.toggles.cache_toggles(&self.overlay_handle, self.mouse_pos);
 
         if self.toggles.aimbot {
             aimbot::do_aimbot(&self)?;
