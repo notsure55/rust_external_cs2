@@ -2,10 +2,10 @@ use glium::{ implement_vertex, Frame };
 use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
 
-use crate::game::{Game, entity::Entity, features::menu::{ draw_filled_box, draw_box, draw_text } };
+use crate::game::{Game, entity::Entity };
 use crate::math::Vec4;
 
-use crate::rusttype as glium_text;
+use super::menu::Menu;
 
 #[derive(Copy, Clone)]
 pub struct Vertex {
@@ -15,22 +15,19 @@ pub struct Vertex {
 implement_vertex!(Vertex, position);
 
 pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
-    display: &Display<T>,
+    menu: &mut Menu<T>,
     frame: &mut Frame,
-    window_size: (u32, u32),
-    game: &Game,
-    system: &glium_text::TextSystem,
-    font: &glium_text::FontTexture
+    game: &Game
 ) {
     for entity in game.entities.iter() {
         match entity {
             Entity::Player(ent) => {
                 let (head_pos, feet_pos) = ent.m_pawn.pos();
-                let head_2d = match head_pos.wts(game, window_size) {
+                let head_2d = match head_pos.wts(game, menu.window_size) {
                     Some(head) => head,
                     None => continue,
                 };
-                let feet_2d = match feet_pos.wts(game, window_size) {
+                let feet_2d = match feet_pos.wts(game, menu.window_size) {
                     Some(feet) => feet,
                     None => continue,
                 };
@@ -41,28 +38,21 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                 let top_left = Vertex{ position: [head_2d.v[0] - scalar * 0.30, head_2d.v[1] - scalar * 0.10] };
 
                 if game.toggles.esp_toggles.boxes {
-                    draw_box(
-                        display,
+                    menu.draw_box(
                         frame,
                         top_left,
                         width,
                         height,
-                        window_size
                     );
                 }
 
                 if game.toggles.esp_toggles.names {
                     let text_top_left = Vertex { position: [top_left.position[0],
                                                             top_left.position[1] - scalar * 0.30] };
-                    draw_text(
-                        display,
+                    menu.draw_text(
                         frame,
                         top_left,
-                        window_size,
                         &ent.m_controller.name,
-                        game,
-                        system,
-                        font,
                         scalar * 0.25,
                         Vec4::new(0.0, 1.0, 1.0, 1.0)
                     );
@@ -70,10 +60,9 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
 
                 if game.toggles.esp_toggles.health_bars {
                     draw_health_bars(
-                        display,
+                        menu,
                         frame,
                         top_left,
-                        window_size,
                         ent.m_pawn.health,
                         height,
                         scalar
@@ -85,10 +74,9 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
 }
 
 fn draw_health_bars<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
-    display: &Display<T>,
+    menu: &mut Menu<T>,
     frame: &mut Frame,
     top_left: Vertex,
-    window_size: (u32, u32),
     health: i32,
     height: f32,
     scalar: f32
@@ -102,13 +90,11 @@ fn draw_health_bars<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
 
     let health_height = height - scalar * health_scalar;
 
-    draw_filled_box(
-        display,
+    menu.draw_filled_box(
         frame,
         health_top_left,
         health_width,
         health_height,
-        window_size,
         Vec4::new(0.0 + health_scalar, 1.0 - health_scalar, 0.0, 1.0)
     );
 }

@@ -6,6 +6,8 @@ use winit::dpi::{ Position::Logical, LogicalSize, LogicalPosition };
 use core::ffi::c_void;
 use windows::Win32::Foundation::HWND;
 
+use crate::game::features::menu::Menu;
+
 use rusttype as glium_text;
 
 mod process;
@@ -58,6 +60,10 @@ fn main() -> Result<(), Error> {
         glium_text::FontTexture::ascii_character_list()
     ).unwrap();
 
+    let window_size = display.get_framebuffer_dimensions();
+
+    let mut menu = Menu::new(display, window_size, system, font);
+
     let hwnd: winit::platform::windows::HWND = handle.into();
 
     game.overlay_handle = HWND(hwnd as *mut c_void);
@@ -74,7 +80,7 @@ fn main() -> Result<(), Error> {
                     game.mouse_pos = (position.x as f32, position.y as f32);
                 },
                 glium::winit::event::WindowEvent::RedrawRequested => {
-                    game.run_cheat_loop(&display, &system, &font).unwrap();
+                    game.run_cheat_loop(&mut menu).unwrap();
                     window.request_redraw()
                 },
                 _ => (),

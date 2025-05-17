@@ -2,20 +2,19 @@ use crate::process::Process;
 use std::io::Error;
 use crate::game::entity::{Entity, Log};
 use crate::offsets;
-use crate::game::features::{aimbot, esp, Toggles, menu};
+use crate::game::features::{aimbot, esp, Toggles};
 // for esp
-use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
 use windows::Win32::Foundation::HWND;
 use core::ffi::c_void;
 use glium::Surface;
 
-use crate::rusttype as glium_text;
+use features::menu::Menu;
 
 mod entity;
 mod sig;
 mod sigscanner;
-mod features;
+pub mod features;
 
 pub struct Game {
     pub process: Process,
@@ -78,9 +77,7 @@ impl Game {
 
     pub fn run_cheat_loop<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
         &mut self,
-        display: &Display<T>,
-        system: &glium_text::TextSystem,
-        font: &glium_text::FontTexture
+        menu: &mut Menu<T>
     ) -> Result<(), Error> {
 
         self.cache_entites();
@@ -90,43 +87,31 @@ impl Game {
             aimbot::do_aimbot(&self)?;
         }
 
-        self.draw_to_screen(display, system, font);
+        self.draw_to_screen(menu);
 
         Ok(())
     }
 
     fn draw_to_screen<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
         &mut self,
-        display: &Display<T>,
-        system: &glium_text::TextSystem,
-        font: &glium_text::FontTexture
+        menu: &mut Menu<T>
     ) {
-        // for storing text glyphs for drawing
-
-        let mut frame = display.draw();
-
-        let window_size = display.get_framebuffer_dimensions();
+        let mut frame = menu.display.draw();
 
         frame.clear_color(0.0, 0.0, 0.0, 0.0);
 
         if self.toggles.esp {
             esp::render_esp(
-                display,
+                menu,
                 &mut frame,
-                window_size,
                 &self,
-                system,
-                font
             );
         }
+
         if self.toggles.menu {
-            menu::render_menu(
-                display,
-                &mut frame,
-                window_size,
+            menu.render_menu(
                 self,
-                system,
-                font
+                &mut frame
             );
         }
 
