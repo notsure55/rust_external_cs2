@@ -2,9 +2,10 @@ use glium::{ implement_vertex, Frame };
 use glium::backend::glutin::{Display};
 use glutin::surface::{SurfaceTypeTrait, ResizeableSurface};
 
-use crate::game::{Game, entity::Entity, features::menu::{ draw_filled_box, draw_box } };
+use crate::game::{Game, entity::Entity, features::menu::{ draw_filled_box, draw_box, draw_text } };
 use crate::math::Vec4;
 
+use crate::rusttype as glium_text;
 
 #[derive(Copy, Clone)]
 pub struct Vertex {
@@ -18,6 +19,8 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     frame: &mut Frame,
     window_size: (u32, u32),
     game: &Game,
+    system: &glium_text::TextSystem,
+    font: &glium_text::FontTexture
 ) {
     for entity in game.entities.iter() {
         match entity {
@@ -49,12 +52,20 @@ pub fn render_esp<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                 }
 
                 if game.toggles.esp_toggles.names {
-                    /*draw_text(
+                    let text_top_left = Vertex { position: [top_left.position[0],
+                                                            top_left.position[1] - scalar * 0.30] };
+                    draw_text(
+                        display,
+                        frame,
                         top_left,
                         window_size,
                         &ent.m_controller.name,
-                        game
-                    );*/
+                        game,
+                        system,
+                        font,
+                        scalar * 0.25,
+                        Vec4::new(0.0, 1.0, 1.0, 1.0)
+                    );
                 }
 
                 if game.toggles.esp_toggles.health_bars {

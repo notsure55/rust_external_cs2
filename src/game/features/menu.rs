@@ -6,6 +6,8 @@ use crate::game::Game;
 use crate::game::features::esp::Vertex;
 use crate::math::Vec4;
 
+use crate::rusttype as glium_text;
+
 fn is_clicked(
     mouse_pos: (f32, f32),
     top_left: Vertex,
@@ -84,14 +86,36 @@ pub fn draw_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
                &params).unwrap();
 }
 
-/*pub fn draw_text(
+pub fn draw_text<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
+    display: &Display<T>,
+    frame: &mut Frame,
     top_left: Vertex,
     window_size: (u32, u32),
     text: &str,
-    game: &Game
+    game: &Game,
+    system: &glium_text::TextSystem,
+    font: &glium_text::FontTexture,
+    scale: f32,
+    color: Vec4
 ) {
+    let text = glium_text::TextDisplay::new(system, font, text);
+    let text_width = text.get_width();
 
-}*/
+    let sx = scale / (window_size.0 as f32 / 2.0);
+    let sy = scale / (window_size.1 as f32 / 2.0);
+
+    let x_ndc = (top_left.position[0] / window_size.0 as f32) * 2.0 - 1.0;
+    let y_ndc = -((top_left.position[1] / window_size.1 as f32) * 2.0 - 1.0);
+
+    let matrix: [[f32; 4]; 4] = cgmath::Matrix4::new(
+        sx,  0.0, 0.0, 0.0,
+        0.0, sy,  0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        x_ndc, y_ndc, 0.0, 1.0,
+    ).into();
+
+    glium_text::draw(&text, &system, frame, matrix, color.v.into()).unwrap();
+}
 
 
 pub fn draw_filled_box<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
@@ -305,6 +329,8 @@ pub fn render_menu<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
     frame: &mut Frame,
     window_size: (u32, u32),
     game: &mut Game,
+    system: &glium_text::TextSystem,
+    font: &glium_text::FontTexture
 ) {
     const WIDTH: f32 = 600.0;
     const HEIGHT: f32 = 450.0;

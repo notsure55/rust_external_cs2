@@ -10,6 +10,8 @@ use windows::Win32::Foundation::HWND;
 use core::ffi::c_void;
 use glium::Surface;
 
+use crate::rusttype as glium_text;
+
 mod entity;
 mod sig;
 mod sigscanner;
@@ -77,6 +79,8 @@ impl Game {
     pub fn run_cheat_loop<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
         &mut self,
         display: &Display<T>,
+        system: &glium_text::TextSystem,
+        font: &glium_text::FontTexture
     ) -> Result<(), Error> {
 
         self.cache_entites();
@@ -86,7 +90,7 @@ impl Game {
             aimbot::do_aimbot(&self)?;
         }
 
-        self.draw_to_screen(display);
+        self.draw_to_screen(display, system, font);
 
         Ok(())
     }
@@ -94,6 +98,8 @@ impl Game {
     fn draw_to_screen<T: SurfaceTypeTrait + ResizeableSurface + 'static>(
         &mut self,
         display: &Display<T>,
+        system: &glium_text::TextSystem,
+        font: &glium_text::FontTexture
     ) {
         // for storing text glyphs for drawing
 
@@ -104,10 +110,24 @@ impl Game {
         frame.clear_color(0.0, 0.0, 0.0, 0.0);
 
         if self.toggles.esp {
-            esp::render_esp(display, &mut frame, window_size, &self);
+            esp::render_esp(
+                display,
+                &mut frame,
+                window_size,
+                &self,
+                system,
+                font
+            );
         }
         if self.toggles.menu {
-            menu::render_menu(display, &mut frame, window_size, self);
+            menu::render_menu(
+                display,
+                &mut frame,
+                window_size,
+                self,
+                system,
+                font
+            );
         }
 
         frame.finish().unwrap();

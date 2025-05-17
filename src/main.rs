@@ -6,11 +6,14 @@ use winit::dpi::{ Position::Logical, LogicalSize, LogicalPosition };
 use core::ffi::c_void;
 use windows::Win32::Foundation::HWND;
 
+use rusttype as glium_text;
+
 mod process;
 mod offsets;
 mod game;
 mod math;
 mod window;
+mod rusttype;
 
 // im kind of interested in building an external cheat, because i want to use rust
 fn main() -> Result<(), Error> {
@@ -47,6 +50,14 @@ fn main() -> Result<(), Error> {
         None => return Err(Error::new(ErrorKind::Other, "HWND is invald!")),
     };
 
+    let system = glium_text::TextSystem::new(&display);
+
+    let font = glium_text::FontTexture::new(
+        &display,
+        &include_bytes!("../fonts/arialbd.ttf")[..], 70,
+        glium_text::FontTexture::ascii_character_list()
+    ).unwrap();
+
     let hwnd: winit::platform::windows::HWND = handle.into();
 
     game.overlay_handle = HWND(hwnd as *mut c_void);
@@ -63,7 +74,7 @@ fn main() -> Result<(), Error> {
                     game.mouse_pos = (position.x as f32, position.y as f32);
                 },
                 glium::winit::event::WindowEvent::RedrawRequested => {
-                    game.run_cheat_loop(&display).unwrap();
+                    game.run_cheat_loop(&display, &system, &font).unwrap();
                     window.request_redraw()
                 },
                 _ => (),
